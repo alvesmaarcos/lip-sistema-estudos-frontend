@@ -1,73 +1,39 @@
-# React + TypeScript + Vite
+# 📚 Sistema de Gerenciamento de Estudos
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+> [cite_start]Trabalho avaliativo da disciplina de **Linguagens de Programação** (Módulo Orientação a Objetos) - UFC Quixadá[cite: 1, 3, 4].
 
-Currently, two official plugins are available:
+## 🎯 Sobre o Projeto
+Este sistema tem como objetivo auxiliar estudantes na organização e acompanhamento de suas rotinas acadêmicas. [cite_start]O foco principal é a aplicação do método de **Revisões Espaçadas**, automatizando o agendamento de revisões para fixação de conteúdo ($D+1$, $D+7$, $D+14$)[cite: 5, 7, 22].
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## ✨ Funcionalidades Principais
 
-## React Compiler
+* [cite_start]**📅 Cronograma Semanal:** Interface visual para definir disciplinas e metas para cada dia da semana[cite: 13].
+* [cite_start]**📝 Diário de Estudos:** Registro detalhado do conteúdo estudado e tempo dedicado[cite: 19].
+* [cite_start]**🧠 Revisões Automáticas:** O sistema calcula e agenda automaticamente as revisões baseadas na data do estudo inicial[cite: 21].
+* [cite_start]**📊 Relatórios de Desempenho:** Visualização de estatísticas sobre estudos realizados e revisões pendentes/atrasadas[cite: 26].
+* [cite_start]**🔒 Acesso Individual:** Suporte a múltiplos usuários com persistência de dados isolada[cite: 28].
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 🛠️ Tecnologias Utilizadas
 
-## Expanding the ESLint configuration
+* ![React](https://img.shields.io/badge/React-20232A?style=flat&logo=react&logoColor=61DAFB) **React** (Vite)
+* ![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=flat&logo=typescript&logoColor=white) **TypeScript**
+* ![Router](https://img.shields.io/badge/React_Router-CA4245?style=flat&logo=react-router&logoColor=white) **React Router Dom**
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## 🚀 Como Rodar o Projeto
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+1.  **Clone o repositório**
+    ```bash
+    git clone [https://github.com/seu-usuario/sistema-estudos-frontend.git](https://github.com/seu-usuario/sistema-estudos-frontend.git)
+    ```
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+2.  **Instale as dependências**
+    ```bash
+    npm install
+    ```
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+3.  **Execute o projeto**
+    ```bash
+    npm run dev
+    ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+---
