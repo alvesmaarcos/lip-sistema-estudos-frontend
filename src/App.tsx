@@ -1,9 +1,11 @@
+import { BrowserRouter } from 'react-router-dom';
+import { AppRoutes } from './routes';
+
 function App() {
   return (
-    <div>
-      <h1>Sistema de Gerenciamento de Estudos</h1>
-      <p>Projeto limpo e pronto para codar!</p>
-    </div>
+    <BrowserRouter>
+      <AppRoutes />
+    </BrowserRouter>
   )
 }
 

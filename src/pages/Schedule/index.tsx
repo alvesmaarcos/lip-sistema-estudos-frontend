@@ -1,0 +1,1 @@
+export const Schedule = () => <h1>Cronograma Semanal</h1>;
