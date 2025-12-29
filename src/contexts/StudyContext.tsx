@@ -77,11 +77,32 @@ export function StudyProvider({ children }: { children: ReactNode }) {
     return newRecord;
   };
 
-  const updateStudyRecord = (id: string, updatedData: Partial<StudyRecord>) => {
-    setStudyRecords(prev => prev.map(record => 
-      record.id === id ? { ...record, ...updatedData } : record
-    ));
-    
+ const updateStudyRecord = (id: string, updatedData: Partial<StudyRecord>) => {
+  setStudyRecords(prev => prev.map(record => {
+    if (record.id === id) {
+      const newRecord = { ...record, ...updatedData };
+      
+      // [LOGICA NOVA] Se a data mudou, precisamos regenerar as revisões
+      if (updatedData.date && updatedData.date !== record.date) {
+        const newRevisions = Logic.createRevisionsForRecord(updatedData.date, algorithmSettings);
+        newRecord.revisions = newRevisions;
+
+        // Atualiza a lista global de reviews (objetos de interface)
+        setReviews(prevReviews => {
+          // Remove as reviews antigas deste estudo
+          const otherReviews = prevReviews.filter(r => r.studyRecordId !== id);
+          // Cria as novas baseadas na nova data
+          const freshReviews = Logic.createReviewsFromRevisions(newRecord, newRevisions);
+          return [...otherReviews, ...freshReviews];
+        });
+      }
+      
+      return newRecord;
+    }
+    return record;
+  }));
+
+  if (!updatedData.date) {
     setReviews(prev => prev.map(review => {
       if (review.studyRecordId === id) {
         return {
@@ -93,7 +114,8 @@ export function StudyProvider({ children }: { children: ReactNode }) {
       }
       return review;
     }));
-  };
+  }
+};
 
   const toggleReviewComplete = (reviewId: string) => {
     setReviews(prev => prev.map(review => {
