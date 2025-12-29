@@ -1,12 +1,10 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { StudyRecord, Review, AlgorithmSettings, DEFAULT_ALGORITHM_SETTINGS } from '@/types/study';
-import { addDays, format, parseISO, differenceInDays, isToday, isBefore, startOfDay, subDays } from 'date-fns';
+import { addDays, format, differenceInDays, isToday, isBefore, startOfDay, subDays } from 'date-fns';
 
-// --- MOCK DATA (DADOS INICIAIS PARA TESTE) ---
-
+// --- MOCK DATA ---
 const TODAY = new Date();
 const YESTERDAY = subDays(TODAY, 1);
-const TWO_DAYS_AGO = subDays(TODAY, 2);
 
 const MOCK_STUDIES: StudyRecord[] = [
   {
@@ -59,7 +57,7 @@ const MOCK_REVIEWS: Review[] = [
     discipline: 'Inteligência Artificial',
     disciplineColor: 'navy',
     topic: 'Redes Neurais - Perceptron',
-    dueDate: format(subDays(TODAY, 1), 'yyyy-MM-dd'), // Venceu ontem
+    dueDate: format(subDays(TODAY, 1), 'yyyy-MM-dd'),
     completed: false,
   },
   {
@@ -68,12 +66,11 @@ const MOCK_REVIEWS: Review[] = [
     discipline: 'Banco de Dados',
     disciplineColor: 'blue',
     topic: 'Normalização e Formas Normais',
-    dueDate: format(TODAY, 'yyyy-MM-dd'), // Para hoje
+    dueDate: format(TODAY, 'yyyy-MM-dd'),
     completed: false,
   }
 ];
-
-// --- FIM DO MOCK DATA ---
+// --- FIM MOCK DATA ---
 
 interface StudyContextType {
   studyRecords: StudyRecord[];
@@ -93,15 +90,20 @@ interface StudyContextType {
 
 const StudyContext = createContext<StudyContextType | undefined>(undefined);
 
+// Função auxiliar para somar horas "HH:MM"
+const timeToDecimal = (timeStr: string) => {
+  if (!timeStr) return 0;
+  const [hours, minutes] = timeStr.split(':').map(Number);
+  return hours + (minutes / 60);
+};
+
 export function StudyProvider({ children }: { children: ReactNode }) {
   const [studyRecords, setStudyRecords] = useState<StudyRecord[]>(MOCK_STUDIES);
   const [reviews, setReviews] = useState<Review[]>(MOCK_REVIEWS);
-  
   const [algorithmSettings, setAlgorithmSettings] = useState<AlgorithmSettings>(DEFAULT_ALGORITHM_SETTINGS);
 
   const addStudyRecord = (record: Omit<StudyRecord, 'id' | 'createdAt' | 'revisions'>): StudyRecord => {
     const baseDate = new Date(record.date.replace(/-/g, '/'));
-    
     const revisions = [
       { date: format(addDays(baseDate, algorithmSettings.firstInterval), 'yyyy-MM-dd'), completed: false },
       { date: format(addDays(baseDate, algorithmSettings.secondInterval), 'yyyy-MM-dd'), completed: false },
@@ -128,7 +130,6 @@ export function StudyProvider({ children }: { children: ReactNode }) {
     }));
 
     setReviews(prev => [...prev, ...newReviews]);
-
     return newRecord;
   };
 
@@ -136,6 +137,7 @@ export function StudyProvider({ children }: { children: ReactNode }) {
     setStudyRecords(prev => prev.map(record => 
       record.id === id ? { ...record, ...updatedData } : record
     ));
+
 
     setReviews(prev => prev.map(review => {
       if (review.studyRecordId === id) {
@@ -179,7 +181,9 @@ export function StudyProvider({ children }: { children: ReactNode }) {
   const getCompletedReviews = () => reviews.filter(r => r.completed);
 
   const getTotalHours = () => {
-      return 42; 
+      return studyRecords.reduce((total, record) => {
+        return total + timeToDecimal(record.timeSpent);
+      }, 0);
   };
   
   const getReviewsCompleted = () => reviews.filter(r => r.completed).length;

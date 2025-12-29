@@ -1,8 +1,9 @@
 import { useMemo } from 'react';
-import { MainLayout } from '@/components/layout/MainLayout'; //
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'; //
-import { useStudy } from '@/contexts/StudyContext'; //
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts'; //
+import { MainLayout } from '@/components/layout/MainLayout';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useStudy } from '@/contexts/StudyContext';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { Clock, CheckCircle2, AlertCircle } from 'lucide-react';
 
 const COLOR_MAP: Record<string, string> = {
   blue: 'hsl(var(--discipline-blue))',
@@ -36,7 +37,6 @@ export default function Relatorios() {
           color: COLOR_MAP[disciplineColor] || COLOR_MAP.default
         };
       }
-
       disciplineStats[discipline].hours += timeToDecimal(timeSpent);
     });
 
@@ -46,7 +46,6 @@ export default function Relatorios() {
     }));
 
     return data.sort((a, b) => b.hours - a.hours);
-
   }, [studyRecords]);
 
   return (
@@ -55,24 +54,29 @@ export default function Relatorios() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total de Horas</CardTitle>
+            <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{getTotalHours().toFixed(1)}h</div>
             <p className="text-xs text-muted-foreground">Tempo acumulado de estudo</p>
           </CardContent>
         </Card>
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Revisões Feitas</CardTitle>
+            <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{getReviewsCompleted()}</div>
             <p className="text-xs text-muted-foreground">Ciclos concluídos</p>
           </CardContent>
         </Card>
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Revisões Pendentes</CardTitle>
+            <AlertCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{getPendingReviews()}</div>
