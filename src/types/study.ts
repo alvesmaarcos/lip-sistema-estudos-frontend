@@ -56,3 +56,5 @@ export const DEFAULT_ALGORITHM_SETTINGS: AlgorithmSettings = {
   secondInterval: 7,
   thirdInterval: 30,
 };
+
+
