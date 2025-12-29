@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom'; // <--- IMPORTANTE
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,8 +9,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { Calendar as CalendarIcon } from 'lucide-react';
-import { format } from 'date-fns';
+import { Calendar as CalendarIcon, ArrowLeft } from 'lucide-react';
+import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { DISCIPLINES, DisciplineColor } from '@/types/study';
@@ -17,20 +18,48 @@ import { useStudy } from '@/contexts/StudyContext';
 import { SuccessModal } from '@/components/ui/success-modal';
 
 export default function RegistrarEstudo() {
-  const { addStudyRecord } = useStudy();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const editId = searchParams.get('edit'); // Captura o ID da URL
+  const dateParam = searchParams.get('date'); // Captura data se vier da home (clicando no +)
+
+  const { addStudyRecord, updateStudyRecord, studyRecords } = useStudy();
   const [showSuccess, setShowSuccess] = useState(false);
   
   const [formData, setFormData] = useState({
     discipline: '',
     disciplineColor: '' as DisciplineColor,
-    timeSpent: '01:20',
+    timeSpent: '01:00',
     date: undefined as Date | undefined,
     topic: '',
     notes: '',
   });
 
+  useEffect(() => {
+    if (editId) {
+      const studyToEdit = studyRecords.find(s => s.id === editId);
+      if (studyToEdit) {
+        setFormData({
+          discipline: studyToEdit.discipline,
+          disciplineColor: studyToEdit.disciplineColor,
+          timeSpent: studyToEdit.timeSpent,
+          date: new Date(studyToEdit.date.replace(/-/g, '/')), 
+          topic: studyToEdit.topic,
+          notes: studyToEdit.notes || '',
+        });
+      }
+    } 
+    else if (dateParam) {
+      setFormData(prev => ({
+        ...prev,
+        date: new Date(dateParam.replace(/-/g, '/'))
+      }));
+    }
+  }, [editId, dateParam, studyRecords]);
+
   const handleDisciplineChange = (value: string) => {
-    const selected = DISCIPLINES.find(d => d.id === value);
+
+    const selected = DISCIPLINES.find(d => d.id === value || d.name === value);
     if (selected) {
       setFormData(prev => ({
         ...prev,
@@ -47,45 +76,63 @@ export default function RegistrarEstudo() {
       return;
     }
 
-    addStudyRecord({
-      discipline: formData.discipline,
-      disciplineColor: formData.disciplineColor,
-      timeSpent: formData.timeSpent,
-      date: format(formData.date, 'yyyy-MM-dd'),
-      topic: formData.topic,
-      notes: formData.notes,
-    });
+    if (editId) {
+      updateStudyRecord(editId, {
+        discipline: formData.discipline,
+        disciplineColor: formData.disciplineColor,
+        timeSpent: formData.timeSpent,
+        date: format(formData.date, 'yyyy-MM-dd'),
+        topic: formData.topic,
+        notes: formData.notes,
+      });
+    } else {
+
+      addStudyRecord({
+        discipline: formData.discipline,
+        disciplineColor: formData.disciplineColor,
+        timeSpent: formData.timeSpent,
+        date: format(formData.date, 'yyyy-MM-dd'),
+        topic: formData.topic,
+        notes: formData.notes,
+      });
+    }
 
     setShowSuccess(true);
-    
-    // Reset form
-    setFormData({
-      discipline: '',
-      disciplineColor: '' as DisciplineColor,
-      timeSpent: '01:20',
-      date: undefined,
-      topic: '',
-      notes: '',
-    });
+  };
+
+  const handleCloseSuccess = () => {
+    setShowSuccess(false);
+    navigate('/home'); 
   };
 
   return (
-    <MainLayout title="Novo Registro">
+    <MainLayout title={editId ? "Editar Estudo" : "Novo Registro"}>
       <Card className="max-w-4xl animate-fade-in">
-        <CardHeader>
-          <CardTitle className="text-xl">Detalhes do Estudo</CardTitle>
-          <CardDescription>Preencha os dados para gerar as revisões automáticas.</CardDescription>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle className="text-xl">{editId ? "Editar Detalhes" : "Detalhes do Estudo"}</CardTitle>
+            <CardDescription>
+              {editId ? "Altere as informações abaixo." : "Preencha os dados para gerar as revisões automáticas."}
+            </CardDescription>
+          </div>
+          {editId && (
+            <Button variant="ghost" onClick={() => navigate('/home')}>
+              <ArrowLeft className="mr-2 h-4 w-4" /> Cancelar
+            </Button>
+          )}
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* First Row */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Disciplina */}
               <div className="space-y-2 md:col-span-1">
                 <Label htmlFor="discipline">Disciplina</Label>
-                <Select onValueChange={handleDisciplineChange}>
+                <Select 
+                  onValueChange={handleDisciplineChange} 
+                  value={DISCIPLINES.find(d => d.name === formData.discipline)?.id || ''}
+                >
                   <SelectTrigger className="h-12">
-                    <SelectValue placeholder="Selecione uma disciplina..." />
+                    <SelectValue placeholder="Selecione..." />
                   </SelectTrigger>
                   <SelectContent>
                     {DISCIPLINES.map(d => (
@@ -97,7 +144,7 @@ export default function RegistrarEstudo() {
                 </Select>
               </div>
 
-              {/* Tempo Dedicado */}
+              {/* Tempo */}
               <div className="space-y-2">
                 <Label htmlFor="timeSpent">Tempo Dedicado</Label>
                 <div className="relative">
@@ -171,10 +218,9 @@ export default function RegistrarEstudo() {
               />
             </div>
 
-            {/* Submit Button */}
             <div className="flex justify-end pt-4">
               <Button type="submit" size="lg" className="px-8">
-                SALVAR REGISTRO
+                {editId ? "ATUALIZAR" : "SALVAR REGISTRO"}
               </Button>
             </div>
           </form>
@@ -183,7 +229,9 @@ export default function RegistrarEstudo() {
 
       <SuccessModal 
         open={showSuccess} 
-        onClose={() => setShowSuccess(false)} 
+        onClose={handleCloseSuccess}
+        title={editId ? "Estudo Atualizado!" : "Estudo Registrado!"}
+        message={editId ? "As alterações foram salvas com sucesso." : "Seu estudo foi registrado e as revisões foram agendadas."}
       />
     </MainLayout>
   );

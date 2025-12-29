@@ -21,12 +21,14 @@ export function CalendarGrid({
   onEditStudy,
   onAddStudy,
 }: CalendarGridProps) {
+  // Gera os 7 dias da semana a partir da data atual
   const startDate = startOfWeek(currentDate, { weekStartsOn: 0 });
   const weekDays = Array.from({ length: 7 }).map((_, i) => addDays(startDate, i));
 
   const getStudiesForDate = (date: Date) => {
     return studies.filter((study) => 
-      isSameDay(new Date(study.date), date)
+      // Correção de Fuso Horário aplicada aqui também
+      isSameDay(new Date(study.date.replace(/-/g, '/')), date)
     );
   };
 
@@ -59,7 +61,7 @@ export function CalendarGrid({
             className="min-h-[400px] border-l first:border-l-0 border-border/40 bg-muted/5 rounded-lg p-2 flex flex-col gap-2 group/col hover:bg-muted/10 transition-colors relative"
           >
             <ScrollArea className="flex-1 -mr-2 pr-2">
-              <div className="space-y-2 pb-8"> {/* Padding bottom para espaço do botão */}
+              <div className="space-y-2 pb-8"> 
                 {dayStudies.map((study) => (
                   <StudyCard 
                     key={study.id}
@@ -70,7 +72,7 @@ export function CalendarGrid({
               </div>
             </ScrollArea>
 
-            {/* Botão de Adicionar (Overlay invisível que aparece no hover da coluna) */}
+            {/* Botão de Adicionar */}
             <div className="absolute bottom-2 left-0 right-0 px-2 opacity-0 group-hover/col:opacity-100 transition-opacity duration-200">
                <button
                 onClick={() => onAddStudy(day)}

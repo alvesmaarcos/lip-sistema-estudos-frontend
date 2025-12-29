@@ -23,12 +23,12 @@ export function StudyCard({ study, onClick }: StudyCardProps) {
     <div 
       onClick={onClick}
       className={cn(
-        "group relative bg-card rounded-md border border-border border-l-4 p-3 cursor-pointer shadow-sm transition-all hover:shadow-md hover:translate-x-1", // Adicionei translate para dar feedback visual
+        "group relative bg-card rounded-md border border-border border-l-4 p-3 cursor-pointer shadow-sm transition-all hover:shadow-md hover:translate-x-1",
         colorClass
       )}
       data-hover="true"
     >
-      <div className="flex flex-col gap-1 pr-6"> {}
+      <div className="flex flex-col gap-1 pr-6">
         {/* Disciplina */}
         <div className="font-semibold text-xs text-foreground leading-tight truncate" title={study.discipline}>
           {study.discipline}
@@ -40,7 +40,7 @@ export function StudyCard({ study, onClick }: StudyCardProps) {
         </div>
       </div>
 
-      {/* Botão de Editar*/}
+      {/* Botão de Editar */}
       <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
         <button 
           className="h-6 w-6 bg-background/80 hover:bg-primary hover:text-primary-foreground backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm border border-border transition-colors"
