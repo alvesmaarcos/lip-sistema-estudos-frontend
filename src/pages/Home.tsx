@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { MainLayout } from '@/components/layout/MainLayout';
-import { CalendarGrid } from '@/components/CalendarGrid';
+import { CalendarGrid } from '@/components/study/CalendarGrid';
 import { useStudy } from '@/contexts/StudyContext';
 import { StudyRecord } from '@/types/study';
 import { Button } from '@/components/ui/button';

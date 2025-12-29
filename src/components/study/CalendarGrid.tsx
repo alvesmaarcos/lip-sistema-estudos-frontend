@@ -1,7 +1,7 @@
 import { format, startOfWeek, addDays, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { StudyRecord } from '@/types/study';
-import { StudyCard } from '@/components/StudyCard'; 
+import { StudyCard } from '@/components/study/StudyCard'; 
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { Plus } from 'lucide-react';

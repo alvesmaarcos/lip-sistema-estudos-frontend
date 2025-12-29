@@ -1,13 +1,17 @@
 import { useState } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
-import { Card, CardContent } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ReviewCard } from '@/components/reviews/ReviewCard';
 import { useStudy } from '@/contexts/StudyContext';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 export default function Revisoes() {
-  const { getOverdueReviews, getTodayReviews, getCompletedReviews, toggleReviewComplete } = useStudy();
-  const [activeTab, setActiveTab] = useState('today');
+  const { 
+    getOverdueReviews, 
+    getTodayReviews, 
+    getCompletedReviews, 
+    toggleReviewComplete 
+  } = useStudy();
 
   const overdueReviews = getOverdueReviews();
   const todayReviews = getTodayReviews();
@@ -15,77 +19,66 @@ export default function Revisoes() {
 
   return (
     <MainLayout title="Minhas Revisões">
-      <Card className="max-w-4xl animate-fade-in">
-        <CardContent className="pt-6">
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="bg-transparent border-b border-border w-full justify-start rounded-none h-auto p-0 mb-6">
-              <TabsTrigger 
-                value="overdue"
-                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-3 text-muted-foreground"
-              >
-                Atrasadas ({overdueReviews.length})
-              </TabsTrigger>
-              <TabsTrigger 
-                value="today"
-                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-3 text-muted-foreground"
-              >
-                Para Hoje ({todayReviews.length})
-              </TabsTrigger>
-              <TabsTrigger 
-                value="completed"
-                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-3 text-muted-foreground"
-              >
-                Concluídas ({completedReviews.length})
-              </TabsTrigger>
-            </TabsList>
+      <Tabs defaultValue="today" className="w-full space-y-6">
+        <TabsList className="grid w-full grid-cols-3 max-w-[400px]">
+          <TabsTrigger value="overdue" className="data-[state=active]:text-red-600">
+            Atrasadas ({overdueReviews.length})
+          </TabsTrigger>
+          <TabsTrigger value="today">
+            Hoje ({todayReviews.length})
+          </TabsTrigger>
+          <TabsTrigger value="completed">
+            Concluídas
+          </TabsTrigger>
+        </TabsList>
 
-            <TabsContent value="overdue" className="mt-0 space-y-3">
-              {overdueReviews.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">Nenhuma revisão atrasada!</p>
-              ) : (
-                overdueReviews.map(review => (
-                  <ReviewCard
-                    key={review.id}
-                    review={review}
-                    variant="overdue"
-                    onToggle={() => toggleReviewComplete(review.id)}
-                  />
-                ))
-              )}
-            </TabsContent>
+        <ScrollArea className="h-[calc(100vh-200px)] pr-4">
+          <TabsContent value="overdue" className="space-y-4 mt-0">
+            {overdueReviews.length === 0 ? (
+              <p className="text-muted-foreground text-center py-8">Nenhuma revisão atrasada! 🎉</p>
+            ) : (
+              overdueReviews.map((review) => (
+                <ReviewCard 
+                  key={review.id} 
+                  review={review} 
+                  variant="overdue" // Passando variant correto
+                  onToggle={() => toggleReviewComplete(review.id)} // [CORREÇÃO] onToggle
+                />
+              ))
+            )}
+          </TabsContent>
 
-            <TabsContent value="today" className="mt-0 space-y-3">
-              {todayReviews.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">Nenhuma revisão para hoje!</p>
-              ) : (
-                todayReviews.map(review => (
-                  <ReviewCard
-                    key={review.id}
-                    review={review}
-                    variant="today"
-                    onToggle={() => toggleReviewComplete(review.id)}
-                  />
-                ))
-              )}
-            </TabsContent>
+          <TabsContent value="today" className="space-y-4 mt-0">
+            {todayReviews.length === 0 ? (
+              <p className="text-muted-foreground text-center py-8">Tudo em dia por hoje.</p>
+            ) : (
+              todayReviews.map((review) => (
+                <ReviewCard 
+                  key={review.id} 
+                  review={review} 
+                  variant="today" // Passando variant correto
+                  onToggle={() => toggleReviewComplete(review.id)} // [CORREÇÃO] onToggle
+                />
+              ))
+            )}
+          </TabsContent>
 
-            <TabsContent value="completed" className="mt-0 space-y-3">
-              {completedReviews.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">Nenhuma revisão concluída ainda.</p>
-              ) : (
-                completedReviews.map(review => (
-                  <ReviewCard
-                    key={review.id}
-                    review={review}
-                    variant="completed"
-                    onToggle={() => toggleReviewComplete(review.id)}
-                  />
-                ))
-              )}
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
+          <TabsContent value="completed" className="space-y-4 mt-0">
+            {completedReviews.length === 0 ? (
+              <p className="text-muted-foreground text-center py-8">Nenhuma revisão concluída ainda.</p>
+            ) : (
+              completedReviews.map((review) => (
+                <ReviewCard 
+                  key={review.id} 
+                  review={review} 
+                  variant="completed" // Passando variant correto
+                  onToggle={() => toggleReviewComplete(review.id)} // [CORREÇÃO] onToggle
+                />
+              ))
+            )}
+          </TabsContent>
+        </ScrollArea>
+      </Tabs>
     </MainLayout>
   );
 }

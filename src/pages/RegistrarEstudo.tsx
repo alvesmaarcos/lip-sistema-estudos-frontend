@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom'; // <--- IMPORTANTE
-import { MainLayout } from '@/components/layout/MainLayout';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { MainLayout } from '@/components/layout/MainLayout'; // [PADRONIZAÇÃO] Usa o layout novo
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { Calendar as CalendarIcon, ArrowLeft } from 'lucide-react';
-import { format, parseISO } from 'date-fns';
+import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { DISCIPLINES, DisciplineColor } from '@/types/study';
@@ -20,8 +20,8 @@ import { SuccessModal } from '@/components/ui/success-modal';
 export default function RegistrarEstudo() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const editId = searchParams.get('edit'); // Captura o ID da URL
-  const dateParam = searchParams.get('date'); // Captura data se vier da home (clicando no +)
+  const editId = searchParams.get('edit');
+  const dateParam = searchParams.get('date');
 
   const { addStudyRecord, updateStudyRecord, studyRecords } = useStudy();
   const [showSuccess, setShowSuccess] = useState(false);
@@ -58,7 +58,6 @@ export default function RegistrarEstudo() {
   }, [editId, dateParam, studyRecords]);
 
   const handleDisciplineChange = (value: string) => {
-
     const selected = DISCIPLINES.find(d => d.id === value || d.name === value);
     if (selected) {
       setFormData(prev => ({
@@ -71,10 +70,7 @@ export default function RegistrarEstudo() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!formData.discipline || !formData.date || !formData.topic) {
-      return;
-    }
+    if (!formData.discipline || !formData.date || !formData.topic) return;
 
     if (editId) {
       updateStudyRecord(editId, {
@@ -86,7 +82,6 @@ export default function RegistrarEstudo() {
         notes: formData.notes,
       });
     } else {
-
       addStudyRecord({
         discipline: formData.discipline,
         disciplineColor: formData.disciplineColor,
@@ -96,7 +91,6 @@ export default function RegistrarEstudo() {
         notes: formData.notes,
       });
     }
-
     setShowSuccess(true);
   };
 
@@ -106,7 +100,9 @@ export default function RegistrarEstudo() {
   };
 
   return (
+    // [AQUI ESTÁ A MUDANÇA] Envolvemos tudo no MainLayout e passamos o título
     <MainLayout title={editId ? "Editar Estudo" : "Novo Registro"}>
+      
       <Card className="max-w-4xl animate-fade-in">
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
@@ -124,7 +120,6 @@ export default function RegistrarEstudo() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Disciplina */}
               <div className="space-y-2 md:col-span-1">
                 <Label htmlFor="discipline">Disciplina</Label>
                 <Select 
@@ -144,7 +139,6 @@ export default function RegistrarEstudo() {
                 </Select>
               </div>
 
-              {/* Tempo */}
               <div className="space-y-2">
                 <Label htmlFor="timeSpent">Tempo Dedicado</Label>
                 <div className="relative">
@@ -155,13 +149,10 @@ export default function RegistrarEstudo() {
                     onChange={(e) => setFormData(prev => ({ ...prev, timeSpent: e.target.value }))}
                     className="h-12 pr-12"
                   />
-                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
-                    hrs
-                  </span>
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">hrs</span>
                 </div>
               </div>
 
-              {/* Data */}
               <div className="space-y-2">
                 <Label>Data</Label>
                 <Popover>
@@ -173,11 +164,7 @@ export default function RegistrarEstudo() {
                         !formData.date && "text-muted-foreground"
                       )}
                     >
-                      {formData.date ? (
-                        format(formData.date, "dd/MM/yyyy")
-                      ) : (
-                        <span>dd/mm/aaaa</span>
-                      )}
+                      {formData.date ? format(formData.date, "dd/MM/yyyy") : <span>dd/mm/aaaa</span>}
                       <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                     </Button>
                   </PopoverTrigger>
@@ -194,7 +181,6 @@ export default function RegistrarEstudo() {
               </div>
             </div>
 
-            {/* Tema */}
             <div className="space-y-2">
               <Label htmlFor="topic">Tema/Assunto</Label>
               <Input
@@ -206,7 +192,6 @@ export default function RegistrarEstudo() {
               />
             </div>
 
-            {/* Observações */}
             <div className="space-y-2">
               <Label htmlFor="notes">Observações (Opcionais)</Label>
               <Textarea

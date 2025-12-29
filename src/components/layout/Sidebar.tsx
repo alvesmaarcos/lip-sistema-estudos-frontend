@@ -65,11 +65,10 @@ export function Sidebar({ userName = 'Usuário' }: SidebarProps) {
             className={({ isActive }) => cn(
               "flex items-center gap-3 px-4 py-3 rounded-lg transition-all",
               isActive 
-                ? "bg-primary text-primary-foreground font-medium shadow-md" // Botão Ativo (Vermelho)
-                : "text-foreground hover:bg-muted" // Botão Inativo
+                ? "bg-primary text-primary-foreground font-medium shadow-md" 
+                : "text-foreground hover:bg-muted" 
             )}
           >
-            {/* Usamos render prop para acessar o isActive dentro do componente */}
             {({ isActive }) => (
               <>
                 <item.icon size={20} />
@@ -80,9 +79,7 @@ export function Sidebar({ userName = 'Usuário' }: SidebarProps) {
                     className={cn(
                       "ml-auto text-xs shadow-sm border border-transparent transition-colors",
                       isActive
-                        // SE ATIVO (Fundo Vermelho): O Badge fica BRANCO com texto VERMELHO
                         ? "bg-white text-primary hover:bg-white/90" 
-                        // SE INATIVO (Fundo Transparente): O Badge fica VERMELHO com texto BRANCO
                         : "bg-primary text-primary-foreground hover:bg-primary/90" 
                     )}
                   >
