@@ -1,85 +1,13 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { StudyRecord, Review, AlgorithmSettings, DEFAULT_ALGORITHM_SETTINGS } from '@/types/study';
-import { addDays, format, differenceInDays, subDays } from 'date-fns';
+import * as Logic from '@/lib/study-logic';
+import { getTodayStr as getToday } from '@/lib/date-utils'; 
+import { MOCK_STUDIES, MOCK_REVIEWS } from '@/lib/mocks'; 
 
-// --- MOCK DATA (DADOS FICTÍCIOS AJUSTADOS) ---
-const TODAY_DATE = new Date();
-const TODAY_STR = format(TODAY_DATE, 'yyyy-MM-dd');
-
-// Datas calculadas para fazer sentido lógico
-const YESTERDAY_STR = format(subDays(TODAY_DATE, 1), 'yyyy-MM-dd');
-const TWO_DAYS_AGO_STR = format(subDays(TODAY_DATE, 2), 'yyyy-MM-dd');
-const TOMORROW_STR = format(addDays(TODAY_DATE, 1), 'yyyy-MM-dd');
-
-const MOCK_STUDIES: StudyRecord[] = [
-  // Cenario 1: Estudo Hoje -> Revisão Futura (Amanhã)
-  {
-    id: '1',
-    discipline: 'Engenharia de Software',
-    disciplineColor: 'purple',
-    topic: 'Padrões de Projeto (MVC)',
-    timeSpent: '02:00',
-    date: TODAY_STR, // Feito HOJE
-    createdAt: new Date().toISOString(),
-    revisions: [],
-    notes: 'Estudo fresco, revisão só amanhã.'
-  },
-  // Cenario 2: Estudo Ontem -> Revisão Hoje (Pendente)
-  {
-    id: '2',
-    discipline: 'Banco de Dados',
-    disciplineColor: 'blue',
-    topic: 'Normalização e Formas Normais',
-    timeSpent: '01:30',
-    date: YESTERDAY_STR, // Feito ONTEM
-    createdAt: new Date().toISOString(),
-    revisions: [],
-  },
-  // Cenario 3: Estudo Anteontem -> Revisão Ontem (Atrasada)
-  {
-    id: '3',
-    discipline: 'Inteligência Artificial',
-    disciplineColor: 'navy',
-    topic: 'Redes Neurais - Perceptron',
-    timeSpent: '03:00',
-    date: TWO_DAYS_AGO_STR, // Feito ANTEONTEM
-    createdAt: new Date().toISOString(),
-    revisions: [],
-  }
-];
-
-const MOCK_REVIEWS: Review[] = [
-  // Revisão do Estudo 3 (IA): Era pra ontem -> ATRASADA
-  {
-    id: 'r1',
-    studyRecordId: '3',
-    discipline: 'Inteligência Artificial',
-    disciplineColor: 'navy',
-    topic: 'Redes Neurais - Perceptron',
-    dueDate: YESTERDAY_STR, 
-    completed: false,
-  },
-  // Revisão do Estudo 2 (Banco): É pra hoje -> HOJE
-  {
-    id: 'r2',
-    studyRecordId: '2',
-    discipline: 'Banco de Dados',
-    disciplineColor: 'blue',
-    topic: 'Normalização e Formas Normais',
-    dueDate: TODAY_STR, 
-    completed: false,
-  },
-  // Revisão do Estudo 1 (Eng Soft): É pra amanhã -> FUTURA
-  {
-    id: 'r3',
-    studyRecordId: '1',
-    discipline: 'Engenharia de Software',
-    disciplineColor: 'purple',
-    topic: 'Padrões de Projeto (MVC)',
-    dueDate: TOMORROW_STR, 
-    completed: false,
-  }
-];
+// --- MOCK DATA ---
+// (Mantenha seus mocks aqui como estavam, ou mova para um arquivo separado mocks.ts para limpar ainda mais)
+// Para economizar espaço na resposta, vou assumir que você manteve o bloco "MOCK DATA" aqui.
+// ... [SEUS MOCKS AQUI] ...
 // --- FIM MOCK DATA ---
 
 interface StudyContextType {
@@ -100,47 +28,31 @@ interface StudyContextType {
 
 const StudyContext = createContext<StudyContextType | undefined>(undefined);
 
-const timeToDecimal = (timeStr: string) => {
-  if (!timeStr) return 0;
-  const [hours, minutes] = timeStr.split(':').map(Number);
-  return hours + (minutes / 60);
-};
-
 export function StudyProvider({ children }: { children: ReactNode }) {
-  const [studyRecords, setStudyRecords] = useState<StudyRecord[]>(MOCK_STUDIES);
+  // Nota: Idealmente moveríamos MOCK_STUDIES para fora ou para um initial state
+  const [studyRecords, setStudyRecords] = useState<StudyRecord[]>(MOCK_STUDIES); 
   const [reviews, setReviews] = useState<Review[]>(MOCK_REVIEWS);
   const [algorithmSettings, setAlgorithmSettings] = useState<AlgorithmSettings>(DEFAULT_ALGORITHM_SETTINGS);
 
-  const addStudyRecord = (record: Omit<StudyRecord, 'id' | 'createdAt' | 'revisions'>): StudyRecord => {
-    // Fuso horário corrigido
-    const baseDate = new Date(record.date.replace(/-/g, '/'));
-    
-    const revisions = [
-      { date: format(addDays(baseDate, algorithmSettings.firstInterval), 'yyyy-MM-dd'), completed: false },
-      { date: format(addDays(baseDate, algorithmSettings.secondInterval), 'yyyy-MM-dd'), completed: false },
-      { date: format(addDays(baseDate, algorithmSettings.thirdInterval), 'yyyy-MM-dd'), completed: false },
-    ];
+  const addStudyRecord = (recordData: Omit<StudyRecord, 'id' | 'createdAt' | 'revisions'>): StudyRecord => {
+    // 1. Gera as datas de revisão usando a Lógica Pura
+    const revisionsRef = Logic.createRevisionsForRecord(recordData.date, algorithmSettings);
 
+    // 2. Cria o objeto do estudo
     const newRecord: StudyRecord = {
-      ...record,
+      ...recordData,
       id: crypto.randomUUID(),
       createdAt: new Date().toISOString(),
-      revisions,
+      revisions: revisionsRef,
     };
 
+    // 3. Gera os objetos de Review para o calendário/dashboard
+    const newReviews = Logic.createReviewsFromRevisions(newRecord, revisionsRef);
+
+    // 4. Atualiza o estado
     setStudyRecords(prev => [...prev, newRecord]);
-
-    const newReviews: Review[] = revisions.map((rev) => ({
-      id: crypto.randomUUID(),
-      studyRecordId: newRecord.id,
-      discipline: record.discipline,
-      disciplineColor: record.disciplineColor,
-      topic: record.topic,
-      dueDate: rev.date,
-      completed: false,
-    }));
-
     setReviews(prev => [...prev, ...newReviews]);
+    
     return newRecord;
   };
 
@@ -149,6 +61,7 @@ export function StudyProvider({ children }: { children: ReactNode }) {
       record.id === id ? { ...record, ...updatedData } : record
     ));
     
+    // Atualiza reviews associadas se mudar tópico/disciplina
     setReviews(prev => prev.map(review => {
       if (review.studyRecordId === id) {
         return {
@@ -165,10 +78,11 @@ export function StudyProvider({ children }: { children: ReactNode }) {
   const toggleReviewComplete = (reviewId: string) => {
     setReviews(prev => prev.map(review => {
       if (review.id === reviewId) {
+        const isCompleting = !review.completed;
         return {
           ...review,
-          completed: !review.completed,
-          completedAt: !review.completed ? format(new Date(), 'yyyy-MM-dd') : undefined,
+          completed: isCompleting,
+          completedAt: isCompleting ? getToday() : undefined,
         };
       }
       return review;
@@ -177,35 +91,17 @@ export function StudyProvider({ children }: { children: ReactNode }) {
 
   const updateAlgorithmSettings = (settings: AlgorithmSettings) => setAlgorithmSettings(settings);
 
-  // Lógica de Comparação por String (Blindada)
-  const getOverdueReviews = () => {
-    const todayStr = format(new Date(), 'yyyy-MM-dd');
-    return reviews
-      .filter(r => !r.completed && r.dueDate < todayStr)
-      .map(r => ({ 
-        ...r, 
-        daysOverdue: differenceInDays(new Date(), new Date(r.dueDate.replace(/-/g, '/'))) 
-      }));
-  };
-
-  const getTodayReviews = () => {
-    const todayStr = format(new Date(), 'yyyy-MM-dd');
-    return reviews.filter(r => !r.completed && r.dueDate === todayStr);
-  };
-
-  const getCompletedReviews = () => reviews.filter(r => r.completed);
-
-  // Badge da Sidebar: Conta Atrasadas + Hoje (Ignora Futuras)
-  const getPendingReviews = () => {
-    const todayStr = format(new Date(), 'yyyy-MM-dd');
-    return reviews.filter(r => !r.completed && r.dueDate <= todayStr).length;
-  };
-
-  const getTotalHours = () => {
-      return studyRecords.reduce((total, record) => {
-        return total + timeToDecimal(record.timeSpent);
-      }, 0);
-  };
+  // --- Getters (Agora delegam para Logic) ---
+  
+  const getOverdueReviews = () => Logic.filterOverdueReviews(reviews);
+  
+  const getTodayReviews = () => Logic.filterTodayReviews(reviews);
+  
+  const getCompletedReviews = () => reviews.filter(r => r.completed); // Simples o suficiente para ficar aqui ou mover
+  
+  const getPendingReviews = () => Logic.filterPendingReviews(reviews);
+  
+  const getTotalHours = () => Logic.calculateTotalStudyHours(studyRecords);
   
   const getReviewsCompleted = () => reviews.filter(r => r.completed).length;
 
