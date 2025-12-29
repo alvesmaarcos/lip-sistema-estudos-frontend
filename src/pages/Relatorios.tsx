@@ -4,6 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useStudy } from '@/contexts/StudyContext';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { Clock, CheckCircle2, AlertCircle } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { truncateLabel } from '@/lib/utils'; 
 
 const COLOR_MAP: Record<string, string> = {
   blue: 'hsl(var(--discipline-blue))',
@@ -23,6 +25,7 @@ const timeToDecimal = (timeStr: string) => {
 
 export default function Relatorios() {
   const { studyRecords, getTotalHours, getReviewsCompleted, getPendingReviews } = useStudy();
+  const isMobile = useIsMobile(); 
 
   const chartData = useMemo(() => {
     const disciplineStats: Record<string, { name: string; hours: number; color: string }> = {};
@@ -48,9 +51,10 @@ export default function Relatorios() {
     return data.sort((a, b) => b.hours - a.hours);
   }, [studyRecords]);
 
+
   return (
     <MainLayout title="Relatórios e Estatísticas">
-      <div className="grid gap-4 md:grid-cols-3 mb-8">
+      <div className="grid gap-4 grid-cols-1 md:grid-cols-3 mb-8">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total de Horas</CardTitle>
@@ -85,11 +89,11 @@ export default function Relatorios() {
         </Card>
       </div>
 
-      <Card className="col-span-4">
+      <Card className="col-span-1 md:col-span-4">
         <CardHeader>
           <CardTitle>Desempenho por Disciplina</CardTitle>
         </CardHeader>
-        <CardContent className="pl-2">
+        <CardContent className="pl-0 md:pl-2">
           {chartData.length > 0 ? (
             <div className="h-[300px] w-full">
               <ResponsiveContainer width="100%" height="100%">
@@ -98,11 +102,12 @@ export default function Relatorios() {
                   
                   <XAxis 
                     dataKey="name" 
-                    className="text-xs font-medium" 
+                    className="text-[10px] md:text-xs font-medium" 
                     tickLine={false} 
                     axisLine={false} 
                     stroke="hsl(var(--muted-foreground))"
-                    interval={0} 
+                    interval={0}
+                    tickFormatter={(name) => truncateLabel(name, isMobile, chartData.length)}
                   />
                   
                   <YAxis 
@@ -121,10 +126,11 @@ export default function Relatorios() {
                       borderRadius: '8px',
                       color: 'hsl(var(--card-foreground))'
                     }}
+                    labelFormatter={(label) => label} 
                     formatter={(value: number) => [`${value} horas`, 'Tempo dedicado']}
                   />
                   
-                  <Bar dataKey="hours" radius={[4, 4, 0, 0]} barSize={50}>
+                  <Bar dataKey="hours" radius={[4, 4, 0, 0]} maxBarSize={60}>
                     {chartData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
