@@ -12,7 +12,7 @@ interface StudyContextType {
   overdueCount: number; 
   todayReviews: Review[]; 
   
-  // Novos campos memoizados (Dados prontos)
+  // Novos campos memoizados
   totalHours: number;
   reviewsCompletedCount: number;
   pendingReviewsCount: number;
@@ -39,7 +39,7 @@ const STORAGE_KEYS = {
   SETTINGS: 'study-manager:settings',
 };
 
-// --- FUNÇÃO DE SEGURANÇA (NOVA) ---
+// --- FUNÇÃO DE SEGURANÇA (ATUALIZADA) ---
 const safeLoad = <T,>(key: string, fallback: T): T => {
   try {
     const saved = localStorage.getItem(key);
@@ -47,11 +47,11 @@ const safeLoad = <T,>(key: string, fallback: T): T => {
     
     const parsed = JSON.parse(saved);
     
-    // Validação específica para Estudos: Se existir dados mas sem o campo novo 'disciplineId',
-    // considera inválido (formato antigo) e força o fallback para evitar crash.
-    if (key === STORAGE_KEYS.STUDIES && Array.isArray(parsed) && parsed.length > 0) {
+    // [CORREÇÃO] Agora verificamos tanto ESTUDOS quanto REVISÕES
+    // Se for uma lista e o primeiro item não tiver 'disciplineId', é dado legado (lixo).
+    if ((key === STORAGE_KEYS.STUDIES || key === STORAGE_KEYS.REVIEWS) && Array.isArray(parsed) && parsed.length > 0) {
       if (!parsed[0].disciplineId) {
-        console.warn(`[Migration] Dados antigos detectados em ${key}. Resetando para evitar conflito.`);
+        console.warn(`[Migration] Dados antigos detectados em ${key}. Resetando para evitar 'Desconhecido'.`);
         return fallback; 
       }
     }
@@ -64,7 +64,7 @@ const safeLoad = <T,>(key: string, fallback: T): T => {
 };
 
 export function StudyProvider({ children }: { children: ReactNode }) {
-  // Inicialização segura usando safeLoad
+  // Inicialização segura
   const [studyRecords, setStudyRecords] = useState<StudyRecord[]>(() => 
     safeLoad(STORAGE_KEYS.STUDIES, MOCK_STUDIES)
   );
@@ -87,7 +87,7 @@ export function StudyProvider({ children }: { children: ReactNode }) {
     setTodayReviewsList(today);
   }, [reviews]);
 
-  // --- OTIMIZAÇÃO DE PERFORMANCE (MEMOIZAÇÃO) ---
+  // --- OTIMIZAÇÃO (MEMOIZAÇÃO) ---
   const totalHours = useMemo(() => 
     Logic.calculateTotalStudyHours(studyRecords), 
     [studyRecords]
