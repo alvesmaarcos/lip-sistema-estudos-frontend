@@ -14,6 +14,9 @@ import Disciplinas from "./pages/Disciplinas";
 import Home from "./pages/Home";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+import RecuperarSenha from "./pages/RecuperarSenha";
+import VerificarCodigo from "./pages/VerificarCodigo";
+import NovaSenha from "./pages/NovaSenha";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +34,9 @@ const App = () => (
             <Route path="/home" element={<Home />} />
             <Route path="/registrar-estudo" element={<RegistrarEstudo />} /> { }
             <Route path="/disciplinas" element={<Disciplinas />} />
+            <Route path="/recuperar-senha" element={<RecuperarSenha />} />
+            <Route path="/verificar-codigo" element={<VerificarCodigo />} />
+            <Route path="/nova-senha" element={<NovaSenha />} />
             {/* <Route path="/registrar" element={<RegistrarEstudo />} /> {} */}
             <Route path="/revisoes" element={<Revisoes />} />
             <Route path="/relatorios" element={<Relatorios />} />
