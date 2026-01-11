@@ -12,8 +12,11 @@ interface StudyCardProps {
 
 export function StudyCard({ study, onClick }: StudyCardProps) {
   const { disciplines } = useDisciplines();
-  const discipline = disciplines.find(d => d.id === study.disciplineId) ||
-    { id: 'unknown', name: 'Desconhecido', color: 'blue' };
+  const discipline = disciplines.find((d) => d.id === study.disciplineId) || {
+    id: "unknown",
+    name: "Desconhecido",
+    color: "blue",
+  };
 
   const theme = getDisciplineTheme(discipline.color);
 

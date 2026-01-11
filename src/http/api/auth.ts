@@ -16,7 +16,8 @@ export interface ForgotPasswordDTO {
 }
 
 export interface ResetPasswordDTO {
-  token: string;
+  email: string;
+  code: string;
   newPassword: string;
 }
 
@@ -64,7 +65,7 @@ export async function loginUser(data: {
 }
 
 export async function verifyEmail(token: string): Promise<{ message: string }> {
-  const response = await api.get(`/auth/verify-email?token=${token}`);
+  const response = await api.get(`/auth/verificar-email?token=${token}`);
   return response.data;
 }
 
@@ -76,9 +77,10 @@ export async function forgotPassword(
 }
 
 export async function resetPassword(data: {
-  token: string;
+  email: string;
+  code: string;
   newPassword: string;
-}) {
+}): Promise<{ message: string }> {
   const response = await api.post("/auth/reset-password", data);
   return response.data;
 }

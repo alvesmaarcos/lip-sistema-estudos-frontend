@@ -4,44 +4,42 @@ import {
   createStudy,
   updateStudy,
   deleteStudy,
+  type StudyDTO,
+  type StudyResponse,
 } from "@/http/api/study";
-import type { StudyDTO } from "@/http/api/study";
 import { toast } from "sonner";
 
 export function useStudies() {
   const queryClient = useQueryClient();
 
-  // GET: Buscar todos os estudos
   const {
     data: studies = [],
     isLoading,
     error,
-  } = useQuery({
+  } = useQuery<StudyResponse[]>({
     queryKey: ["studies"],
     queryFn: async () => {
       const response = await getStudies();
       return response.data;
     },
-    staleTime: 5 * 60 * 1000, // 5 minutos
   });
 
-  // POST: Criar novo estudo
   const createMutation = useMutation({
-    mutationFn: createStudy,
+    mutationFn: (data: StudyDTO) => createStudy(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["studies"] });
+      queryClient.invalidateQueries({ queryKey: ["reviews"] });
       toast.success("Estudo registrado!", {
         description: "Registro salvo com sucesso no histórico.",
       });
     },
-    onError: (error: Error) => {
+    onError: (error) => {
       toast.error("Erro ao registrar estudo", {
         description: error.message || "Tente novamente.",
       });
     },
   });
 
-  // PUT: Atualizar estudo existente
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: StudyDTO }) =>
       updateStudy(id, data),
@@ -51,21 +49,20 @@ export function useStudies() {
         description: "Registro atualizado com sucesso.",
       });
     },
-    onError: (error: Error) => {
+    onError: (error) => {
       toast.error("Erro ao atualizar", {
         description: error.message || "Tente novamente.",
       });
     },
   });
 
-  // DELETE: Remover estudo
   const deleteMutation = useMutation({
     mutationFn: deleteStudy,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["studies"] });
       toast.success("Estudo removido!");
     },
-    onError: (error: Error) => {
+    onError: (error) => {
       toast.error("Erro ao deletar", {
         description: error.message || "Tente novamente.",
       });

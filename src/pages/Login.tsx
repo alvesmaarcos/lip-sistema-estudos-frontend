@@ -45,7 +45,7 @@ const Login = () => {
       await login(data.email, data.password);
     } catch (error) {
       // Se o erro for de email não verificado
-      if (error.message?.includes("Email not verified")) {
+      if (error.response?.data?.message?.includes("Email not verified")) {
         setShowEmailNotVerified(true);
       }
     }
@@ -167,7 +167,7 @@ const Login = () => {
             </Link>
 
             <Link
-              to="/forgot-password"
+              to="/recuperar-senha"
               className="text-primary hover:underline text-sm font-medium transition-colors"
             >
               esqueceu sua senha?

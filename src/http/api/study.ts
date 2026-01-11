@@ -1,7 +1,26 @@
 import { api } from "./index";
 
 export interface StudyDTO {
-  disciplineId: string;
+  disciplineId: number;
+  timeSpent: string;
+  date: string;
+  topic: string;
+  notes?: string;
+}
+
+export class CreateStudyDto {
+  disciplineId: number;
+  timeSpent: string;
+  date: string;
+  topic: string;
+  notes?: string;
+  revisionIntervals: number[];
+}
+
+export interface StudyResponse {
+  id: number;
+  disciplineId: number;
+  disciplineName: string;
   timeSpent: string;
   date: string;
   topic: string;
@@ -9,34 +28,47 @@ export interface StudyDTO {
 }
 
 export function createStudy(data: StudyDTO) {
-  const { date, disciplineId, timeSpent, topic, notes } = data;
-  console.log(date);
-  console.log(disciplineId);
-  console.log(timeSpent);
-  console.log(topic);
-  console.log(notes);
+  const userId = localStorage.getItem("userId");
 
   const payload = {
-    disciplineId: Number(data.disciplineId),
-    timeSpent,
-    date,
-    topic,
-    notes,
+    disciplineId: data.disciplineId,
+    timeSpent: data.timeSpent,
+    date: data.date,
+    topic: data.topic,
+    notes: data.notes || "",
   };
 
-  console.log(payload);
-
-  return api.post("/studies", payload);
+  return api.post<StudyResponse>("/studies", payload, {
+    headers: { userId: userId || "" },
+  });
 }
 
 export function getStudies() {
-  return api.get("/studies");
+  const userId = localStorage.getItem("userId");
+  return api.get<StudyResponse[]>("/studies", {
+    headers: { userId: userId || "" },
+  });
 }
 
 export function updateStudy(id: string, data: StudyDTO) {
-  return api.put(`/studies/${id}`, data);
+  const userId = localStorage.getItem("userId");
+
+  const payload = {
+    disciplineId: data.disciplineId,
+    timeSpent: data.timeSpent,
+    date: data.date,
+    topic: data.topic,
+    notes: data.notes || "",
+  };
+
+  return api.put<StudyResponse>(`/studies/${id}`, payload, {
+    headers: { userId: userId || "" },
+  });
 }
 
 export function deleteStudy(id: string) {
-  return api.delete(`/studies/${id}`);
+  const userId = localStorage.getItem("userId");
+  return api.delete(`/studies/${id}`, {
+    headers: { userId: userId || "" },
+  });
 }

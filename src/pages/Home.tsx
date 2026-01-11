@@ -1,25 +1,40 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { format } from "date-fns";
+import { format, addWeeks, subWeeks } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 import { MainLayout } from "@/components/layout/MainLayout";
 import { CalendarGrid } from "@/components/study/CalendarGrid";
 import { Button } from "@/components/ui/button";
 
-import { FileText, Loader2 } from "lucide-react";
+import { FileText, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { useStudies } from "@/hooks/use-studies";
 import { downloadPdfReport } from "@/http/api/report";
 import { toast } from "sonner";
 
 import type { StudyRecord } from "@/types/study";
+import type { StudyResponse } from "@/http/api/study";
+import { useReviews } from "@/hooks/use-reviews";
 
 export default function Home() {
   const navigate = useNavigate();
 
-  const { studies, isLoading } = useStudies();
+  const { allReviews, toggleReview } = useReviews();
 
-  const [currentDate] = useState(new Date());
+  const { studies: apiStudies, isLoading } = useStudies();
+
+  const studies: StudyRecord[] = apiStudies.map((study: StudyResponse) => ({
+    id: String(study.id),
+    disciplineId: String(study.disciplineId),
+    timeSpent: study.timeSpent,
+    date: study.date,
+    topic: study.topic,
+    notes: study.notes || "",
+    createdAt: new Date().toISOString(),
+    revisions: [],
+  }));
+
+  const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [isExporting, setIsExporting] = useState(false);
 
@@ -61,6 +76,21 @@ export default function Home() {
     }
   };
 
+  const goToPreviousWeek = () => {
+    setCurrentDate(subWeeks(currentDate, 1));
+  };
+
+  const goToNextWeek = () => {
+    setCurrentDate(addWeeks(currentDate, 1));
+  };
+
+  const goToToday = () => {
+    setCurrentDate(new Date());
+  };
+
+  const isCurrentWeek =
+    format(currentDate, "yyyy-w") === format(new Date(), "yyyy-w");
+
   if (isLoading) {
     return (
       <MainLayout title="Tela Inicial">
@@ -74,28 +104,77 @@ export default function Home() {
   return (
     <MainLayout title="Tela Inicial">
       <section className="space-y-6">
+        {/* Cabeçalho com navegação */}
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-4">
             <h2 className="text-xl font-semibold text-foreground">
               Cronograma Semanal
             </h2>
-            <span className="text-sm text-muted-foreground capitalize">
-              {format(currentDate, "MMMM 'de' yyyy", { locale: ptBR })}
+
+            {/* Controles de navegação */}
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={goToPreviousWeek}
+                title="Semana anterior"
+                className="h-10 w-10"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </Button>
+
+              <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-muted min-w-max">
+                <span className="text-sm font-medium text-muted-foreground">
+                  {format(currentDate, "MMM", { locale: ptBR })}
+                </span>
+                <span className="text-sm font-bold text-foreground">
+                  {format(currentDate, "yyyy")}
+                </span>
+              </div>
+
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={goToNextWeek}
+                title="Próxima semana"
+                className="h-10 w-10"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </Button>
+
+              {!isCurrentWeek && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={goToToday}
+                  className="ml-2"
+                >
+                  Hoje
+                </Button>
+              )}
+            </div>
+
+            <span className="text-sm text-muted-foreground capitalize w-full md:w-auto md:text-right">
+              {format(currentDate, "EEEE, d 'de' MMMM", { locale: ptBR })}
             </span>
           </div>
 
+          {/* Grid do calendário */}
           <div className="border rounded-xl bg-card p-4 shadow-sm overflow-x-auto">
             <CalendarGrid
               studies={studies}
+              reviews={allReviews}
               currentDate={currentDate}
               selectedDate={selectedDate}
               onDateSelect={handleDateSelect}
               onEditStudy={handleEditStudy}
               onAddStudy={handleAddStudy}
+              onToggleReview={toggleReview}
             />
           </div>
         </div>
 
+        {/* Botão de exportação */}
         <div className="flex justify-start pt-4">
           <Button
             onClick={handleExport}

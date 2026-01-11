@@ -7,6 +7,8 @@ import * as z from "zod";
 import { useDisciplines } from "@/contexts/DisciplineContext";
 import { normalizeDate, formatDateForStorage } from "@/lib/date-utils";
 import { useStudies } from "./use-studies";
+import { getStudies } from "@/http/api/study";
+import { toast } from "sonner";
 
 const studySchema = z.object({
   disciplineId: z.string({ required_error: "Selecione uma disciplina." }),
@@ -26,11 +28,11 @@ export function useStudyForm() {
   const dateParam = searchParams.get("date");
 
   const { disciplines } = useDisciplines();
-  const { studies, createStudy, updateStudy, isCreating, isUpdating } =
-    useStudies();
+  const { createStudy, updateStudy, isCreating, isUpdating } = useStudies();
 
   const [showSuccess, setShowSuccess] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const [isLoadingStudy, setIsLoadingStudy] = useState(false);
 
   const form = useForm<StudyFormValues>({
     resolver: zodResolver(studySchema),
@@ -43,37 +45,64 @@ export function useStudyForm() {
     },
   });
 
-  // Carregar dados para edição
   useEffect(() => {
-    if (editId && studies.length > 0) {
-      const studyToEdit = studies.find((s) => s.id === editId);
+    const loadStudyForEdit = async () => {
+      if (!editId) return;
 
-      if (studyToEdit) {
-        form.reset({
-          disciplineId: studyToEdit.disciplineId,
-          timeSpent: studyToEdit.timeSpent,
-          date: normalizeDate(studyToEdit.date),
-          topic: studyToEdit.topic,
-          notes: studyToEdit.notes || "",
+      setIsLoadingStudy(true);
+      try {
+        const response = await getStudies();
+
+        const studyToEdit = response.data.find((s) => {
+          return String(s.id) === String(editId);
         });
-      }
-    }
-  }, [editId, studies, form]);
 
-  // Submit
+        if (studyToEdit) {
+          const formData = {
+            disciplineId: String(studyToEdit.disciplineId),
+            timeSpent: studyToEdit.timeSpent,
+            date: normalizeDate(studyToEdit.date),
+            topic: studyToEdit.topic,
+            notes: studyToEdit.notes || "",
+          };
+
+          form.reset(formData);
+        } else {
+          toast.error("Estudo não encontrado", {
+            description: `Não foi possível encontrar o estudo com ID ${editId}`,
+          });
+        }
+      } catch (error) {
+        console.error("Erro ao carregar estudo:", error);
+        toast.error("Erro ao carregar estudo", {
+          description: "Não foi possível carregar os dados do estudo.",
+        });
+      } finally {
+        setIsLoadingStudy(false);
+      }
+    };
+
+    loadStudyForEdit();
+  }, [editId, form]);
+
   const onSubmit = (data: StudyFormValues) => {
     const disciplineExists = disciplines.some(
       (d) => d.id === data.disciplineId
     );
 
-    if (!disciplineExists) return;
+    if (!disciplineExists) {
+      toast.error("Disciplina inválida", {
+        description: "Por favor, selecione uma disciplina válida.",
+      });
+      return;
+    }
 
     const payload = {
-      disciplineId: data.disciplineId,
+      disciplineId: Number(data.disciplineId),
       timeSpent: data.timeSpent,
       date: formatDateForStorage(data.date),
       topic: data.topic,
-      notes: data.notes,
+      notes: data.notes || "",
     };
 
     if (editId) {
@@ -109,6 +138,7 @@ export function useStudyForm() {
     successMessage,
     handleCloseSuccess,
     isEditing: !!editId,
-    isSubmitting: isCreating || isUpdating,
+    isSubmitting: isCreating || isUpdating || isLoadingStudy,
+    isLoadingStudy,
   };
 }

@@ -1,3 +1,5 @@
+/* eslint-disable react-refresh/only-export-components */
+
 import {
   createContext,
   useContext,
@@ -24,6 +26,7 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
+  token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
@@ -31,28 +34,36 @@ interface AuthContextType {
   logout: () => Promise<void>;
   verifyEmail: (token: string) => Promise<void>;
   forgotPassword: (email: string) => Promise<void>;
-  resetPassword: (token: string, newPassword: string) => Promise<void>;
+  resetPassword: (
+    code: string,
+    email: string,
+    newPassword: string
+  ) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
+    const storedToken = localStorage.getItem("accessToken");
     const userId = localStorage.getItem("userId");
     const userName = localStorage.getItem("userName");
-    const token = localStorage.getItem("accessToken");
+    const userEmail = localStorage.getItem("userEmail");
 
-    if (userId && userName && token) {
+    if (storedToken && userId && userName) {
+      setToken(storedToken);
       setUser({
         id: Number(userId),
         name: userName,
-        email: "", // Pode buscar do backend se necessário
+        email: userEmail || "",
       });
     }
+
     setIsLoading(false);
   }, []);
 
@@ -60,6 +71,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const response = await loginUser({ email, password });
 
+      localStorage.setItem("accessToken", response.accessToken);
+      localStorage.setItem("refreshToken", response.refreshToken);
+      localStorage.setItem("userId", String(response.userId));
+      localStorage.setItem("userName", response.name);
+      localStorage.setItem("userEmail", response.email);
+
+      setToken(response.accessToken);
       setUser({
         id: response.userId,
         name: response.name,
@@ -69,7 +87,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       toast.success("Login realizado com sucesso!");
       navigate("/home");
     } catch (error) {
-      const errorMessage = error.message || "Credenciais inválidas";
+      const errorMessage =
+        error.response?.data?.message || "Credenciais inválidas";
       toast.error("Erro no login", { description: errorMessage });
       throw error;
     }
@@ -78,13 +97,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const register = async (name: string, email: string, password: string) => {
     try {
       await registerUser({ name, email, password });
-
       toast.success("Cadastro realizado!", {
         description: "Verifique seu email para ativar a conta.",
       });
     } catch (error) {
-      const errorMessage = error.message || "Erro ao cadastrar";
-      toast.error("Erro no cadastro", { description: errorMessage });
+      toast.error("Erro no cadastro");
       throw error;
     }
   };
@@ -92,54 +109,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     try {
       await logoutApi();
+    } finally {
       setUser(null);
-      localStorage.clear();
-      toast.success("Logout realizado com sucesso!");
-      navigate("/login");
-    } catch (error) {
-      // Mesmo com erro, limpar localmente
-      setUser(null);
+      setToken(null);
       localStorage.clear();
       navigate("/login");
     }
   };
 
   const verifyEmail = async (token: string) => {
-    try {
-      await verifyEmailApi(token);
-      toast.success("Email verificado com sucesso!", {
-        description: "Você já pode fazer login.",
-      });
-      navigate("/login");
-    } catch (error) {
-      const errorMessage = error.message || "Token inválido ou expirado";
-      toast.error("Erro na verificação", { description: errorMessage });
-      throw error;
-    }
+    await verifyEmailApi(token);
   };
 
   const forgotPassword = async (email: string) => {
     try {
       await forgotPasswordApi(email);
-      toast.success("Email enviado!", {
-        description: "Verifique sua caixa de entrada.",
-      });
-    } catch (error) {
-      const errorMessage = error.message || "Erro ao enviar email";
-      toast.error("Erro", { description: errorMessage });
-      throw error;
+      toast.success("Email enviado!");
+    } catch {
+      toast.error("Erro ao enviar email");
     }
   };
 
-  const resetPassword = async (token: string, newPassword: string) => {
+  const resetPassword = async (
+    code: string,
+    email: string,
+    newPassword: string
+  ) => {
     try {
-      await resetPasswordApi({ token, newPassword });
+      await resetPasswordApi({ code, email, newPassword });
       toast.success("Senha redefinida com sucesso!");
       navigate("/login");
-    } catch (error) {
-      const errorMessage = error.message || "Token inválido ou expirado";
-      toast.error("Erro ao redefinir senha", { description: errorMessage });
-      throw error;
+    } catch {
+      toast.error("Erro ao redefinir senha");
     }
   };
 
@@ -147,7 +148,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     <AuthContext.Provider
       value={{
         user,
-        isAuthenticated: !!user,
+        token,
+        isAuthenticated: !!user && !!token,
         isLoading,
         login,
         register,
@@ -162,10 +164,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 }
 
-// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
   const context = useContext(AuthContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;

@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
 import { Loader2, CheckCircle, XCircle, Mail } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
+import { verifyEmail } from "@/http/api/auth";
+import { toast } from "sonner";
 
 export default function VerifyEmail() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { verifyEmail } = useAuth();
   const [status, setStatus] = useState<"loading" | "success" | "error">(
     "loading"
   );
@@ -23,19 +23,40 @@ export default function VerifyEmail() {
       return;
     }
 
-    verifyEmail(token)
-      .then(() => {
+    // Função assíncrona para verificar o email
+    const verify = async () => {
+      try {
+        await verifyEmail(token);
+
         setStatus("success");
-        // Redirecionar após 3 segundos
+
+        // Toast de sucesso APENAS uma vez
+        toast.success("Email verificado!", {
+          description: "Sua conta foi ativada com sucesso.",
+          id: "verify-success", // ID para evitar duplicatas
+        });
+
+        // Redireciona após 3 segundos
         setTimeout(() => {
-          navigate("/login");
+          navigate("/login", { replace: true });
         }, 3000);
-      })
-      .catch((error) => {
+      } catch (error) {
         setStatus("error");
-        setErrorMessage(error.message || "Token inválido ou expirado");
-      });
-  }, [searchParams, verifyEmail, navigate]);
+        setErrorMessage(
+          error.response?.data?.message || "Token inválido ou expirado"
+        );
+
+        // Toast de erro APENAS uma vez
+        toast.error("Erro na verificação", {
+          description:
+            error.response?.data?.message || "Token inválido ou expirado",
+          id: "verify-error", // ID para evitar duplicatas
+        });
+      }
+    };
+
+    verify();
+  }, [searchParams, navigate]);
 
   return (
     <div className="min-h-screen bg-primary flex items-center justify-center p-4">

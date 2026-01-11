@@ -72,9 +72,6 @@ export function SidebarContent({
           >
             {displayName}
           </span>
-          <span className="text-xs text-muted-foreground truncate block">
-            Eng. Software
-          </span>
         </div>
 
         <button
