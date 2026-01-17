@@ -5,10 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "tsc && vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "lint:strict": "eslint . --max-warnings 0",
+    "preview": "vite preview",
+    "test": "echo 'No tests configured yet' && exit 0"
   },
   "dependencies": {
     "@fontsource/inter": "^5.2.8",
