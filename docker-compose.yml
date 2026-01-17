@@ -1,0 +1,14 @@
+services:
+  frontend:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    container_name: lip-frontend
+    ports:
+      - "5173:80"
+    networks:
+      - lip-network
+
+networks:
+  lip-network:
+    driver: bridge

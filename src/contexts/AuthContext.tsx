@@ -37,7 +37,7 @@ interface AuthContextType {
   resetPassword: (
     code: string,
     email: string,
-    newPassword: string
+    newPassword: string,
   ) => Promise<void>;
 }
 
@@ -69,6 +69,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string) => {
     try {
+      localStorage.clear();
+
       const response = await loginUser({ email, password });
 
       localStorage.setItem("accessToken", response.accessToken);
@@ -133,7 +135,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const resetPassword = async (
     code: string,
     email: string,
-    newPassword: string
+    newPassword: string,
   ) => {
     try {
       await resetPasswordApi({ code, email, newPassword });
